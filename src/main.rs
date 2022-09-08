@@ -54,20 +54,38 @@ fn offset<T>(n: u32) -> *const c_void {
 
 // == // Generate your VAO here
 unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
-    // Implement me!
+    //https://github.com/TreeForTwo/gloom-rs/blob/master/src/main.rs
 
-    // Also, feel free to delete comments :)
-
-    // This should:
     // * Generate a VAO and bind it
-    // * Generate a VBO and bind it
-    // * Fill it with data
-    // * Configure a VAP for the data and enable it
-    // * Generate a IBO and bind it
-    // * Fill it with data
-    // * Return the ID of the VAO
+    let mut vao_id: u32 = 0;
 
-    0
+    gl::GenVertexArrays(1, &mut vao_id);
+    gl::BindVertexArray(vao_id);
+
+    // * Generate a VBO and bind it
+    let mut vbo_id: u32 = 0;
+
+    gl::GenBuffers(1, &mut vbo_id);
+    gl::BindBuffer(gl::ARRAY_BUFFER, vbo_id);
+
+    // * Fill it with data
+    gl::BufferData(gl::ARRAY_BUFFER, byte_size_of_array(&vertices), pointer_to_array(&vertices), gl::STATIC_DRAW, );
+
+    // * Configure a VAP for the data and enable it
+    gl::EnableVertexAttribArray(0);
+    gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE, 0, ptr::null(), );
+
+    // * Generate a IBO and bind it
+    let mut ibo_id: u32 = 0;
+
+    gl::GenBuffers(1, &mut ibo_id);
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ibo_id);
+
+    // * Fill it with data
+    gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, byte_size_of_array(&indices), pointer_to_array(&indices), gl::STATIC_DRAW);
+
+    // * Return the ID of the VAO
+    vao_id
 }
 
 
