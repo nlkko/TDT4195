@@ -72,8 +72,9 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
     gl::BufferData(gl::ARRAY_BUFFER, byte_size_of_array(&vertices), pointer_to_array(&vertices), gl::STATIC_DRAW, );
 
     // * Configure a VAP for the data and enable it
+    gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 0, ptr::null());
     gl::EnableVertexAttribArray(0);
-    gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE, 0, ptr::null(), );
+
 
     // * Generate a IBO and bind it
     let mut ibo_id: u32 = 0;
@@ -150,13 +151,33 @@ fn main() {
 
         // == // Set up your VAO around here
         let vertices: Vec<f32> = vec!{
-            -0.6, -0.6, 0.0,
-            0.6, -0.6, 0.0,
-            0.0, 0.6, 0.0
+            -0.1, -0.1, 0.,
+            0.1, -0.1, 0.,
+            0., 0.1, 0.,
+
+            0.7, 0.7, 0.,
+            0.5, 0.7, 0.,
+            0.7, 0.5, 0.,
+
+            -0.7, -0.7, 0.,
+            -0.5, -0.7, 0.,
+            -0.7, -0.5, 0.,
+
+            -0.7, 0.7, 0.,
+            -0.7, 0.5, 0.,
+            -0.5, 0.7, 0.,
+
+            0.7, -0.7, 0.,
+            0.7, -0.5, 0.,
+            0.5, -0.7, 0.,
         };
 
         let indices: Vec<u32> = vec!{
-            0, 1, 2
+            0, 1, 2,
+            3, 4, 5,
+            6, 7, 8,
+            9, 10, 11,
+            12, 13, 14
         };
 
         let my_vao = unsafe { create_vao(&vertices, &indices) };
@@ -254,7 +275,7 @@ fn main() {
                 simple_shader.activate();
                 gl::DrawElements(
                     gl::TRIANGLES,
-                    (&indicies).len() as i32,
+                    (&indices).len() as i32,
                     gl::UNSIGNED_INT,
                     ptr::null(),
                 );
