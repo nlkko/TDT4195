@@ -5,12 +5,12 @@
 Task 1: Drawing your first triangle
 
 c)
-![](images/task1c.png){height=3em}
+![](images/task1c.png){height=15em}
 
 Task 2: Geometry and Theory
 
-a)
-![](images/task2a.png)
+a)<br>
+![](images/task2a.png){height=15em}
 
 i) The phenomenom is called clipping.
 
@@ -20,8 +20,9 @@ exceeds 1.0 it no longer gets rendered.
 
 iii) To avoid unnecessary computations, which can be used elsewhere.
 
-b)
-![](images/task2b.png)
+b)<br>
+
+![](images/task2b.png){height=15em}
 
 i) When changing the indices from 0, 1, 2 to 0, 2, 1 the triangle is not showing.
 
@@ -61,7 +62,7 @@ void main()
     gl_Position = vec4(-position, 1.0f);
 }
 ```
-Result: ![](images/task2d1.png)
+Result:<br> ![](images/task2d1.png){height=15em}
 
 
 In order to change the color we simply change the RGBA vector in the fragment shader.
@@ -75,4 +76,4 @@ void main()
     color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 }
 ```
-Result: ![](images/task2d2.png)
+Result:<br> ![](images/task2d2.png){height=15em}

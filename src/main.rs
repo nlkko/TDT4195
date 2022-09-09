@@ -253,12 +253,7 @@ fn main() {
                 gl::BindVertexArray(my_vao);
                 gl::EnableVertexArrayAttrib(my_vao, 0);
                 simple_shader.activate();
-                gl::DrawElements(
-                    gl::TRIANGLES,
-                    (&indices).len() as i32,
-                    gl::UNSIGNED_INT,
-                    ptr::null(),
-                );
+                gl::DrawElements(gl::TRIANGLES, (&indices).len() as i32, gl::UNSIGNED_INT, ptr::null());
 
 
             }
