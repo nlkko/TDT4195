@@ -281,8 +281,7 @@ fn main() {
             transformation_matrix *= glm::perspective(1.0,PI / 2.0,1.0,100.0);
             transformation_matrix *= glm::translation(&glm::vec3(0.0, 0.0, -1.5));
             transformation_matrix *= glm::translation(&position);
-            transformation_matrix *= glm::rotation(rotation[0], &glm::vec3(1.0, 0.0, 0.0));
-            transformation_matrix *= glm::rotation(rotation[1], &glm::vec3(0.0, 1.0, 0.0));
+            transformation_matrix *= glm::rotation(rotation[0], &glm::vec3(1.0, 0.0, 0.0)) * glm::rotation(rotation[1], &glm::vec3(0.0, 1.0, 0.0));;
 
             unsafe {
                 // Clear the color and depth buffers
