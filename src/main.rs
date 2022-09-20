@@ -61,26 +61,22 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colours: &Vec<f32>
     let mut ibo_id: u32 = 0;
     let mut vbo_colour_id: u32 = 0;
 
-    // * Generate a VAO and bind it
+    // * VAO
     gl::GenVertexArrays(1, &mut vao_id);
     gl::BindVertexArray(vao_id);
 
-    // * Generate a VBO and bind it
+    // * VBO
     gl::GenBuffers(1, &mut vbo_id);
     gl::BindBuffer(gl::ARRAY_BUFFER, vbo_id);
-
-    // * Fill it with data
     gl::BufferData(gl::ARRAY_BUFFER, byte_size_of_array(&vertices), pointer_to_array(&vertices), gl::STATIC_DRAW);
 
-    // * Configure a VAP for the data and enable it
+    // * VAP
     gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 0, ptr::null());
     gl::EnableVertexAttribArray(0);
 
-    // * Generate a IBO and bind it
+    // * IBO
     gl::GenBuffers(1, &mut ibo_id);
     gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ibo_id);
-
-    // * Fill it with data
     gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, byte_size_of_array(&indices), pointer_to_array(&indices), gl::STATIC_DRAW);
 
     // * Configure colour
@@ -191,29 +187,13 @@ fn main() {
 
         let my_vao = unsafe { create_vao(&vertices, &indices, &colours) };
 
-        // == // Set up your shaders here
-
-        // Basic usage of shader helper:
-        // The example code below creates a 'shader' object.
-        // It which contains the field `.program_id` and the method `.activate()`.
-        // The `.` in the path is relative to `Cargo.toml`.
-        // This snippet is not enough to do the exercise, and will need to be modified (outside
-        // of just using the correct path), but it only needs to be called once
-
-        /*
-        let simple_shader = unsafe {
-            shader::ShaderBuilder::new()
-                .attach_file("./path/to/simple/shader.file")
-                .link()
-        };
-        */
+        // Shaders here
         let simple_shader = unsafe {
             shader::ShaderBuilder::new()
                 .attach_file("./shaders/simple.frag")
                 .attach_file("./shaders/simple.vert")
                 .link()
         };
-
 
         // Used to demonstrate keyboard handling for exercise 2.
         let mut _arbitrary_number = 0.0; // feel free to remove
@@ -270,21 +250,23 @@ fn main() {
             }
 
             // == // Please compute camera transforms here (exercise 2 & 3)
-
+            let mut transformation_matrix: glm::Mat4 = glm::identity();
+            let mut angle = 0.0;
+            // transformation_matrix *= glm::rotation(angle, &glm::vec3(1.0, 0.0, 0.0));
+            // transformation_matrix *=  glm::translation(&glm::vec3(0.0, 1.0, 0.0));
+            // transformation_matrix *=  glm::scaling(&glm::vec3(1.0, 1.0, 1.0));
 
             unsafe {
                 // Clear the color and depth buffers
                 gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky, full opacity
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-
+                gl::UniformMatrix4fv(2, 1, gl::FALSE, transformation_matrix.as_ptr());
 
                 // == // Issue the necessary gl:: commands to draw your scene here
                 gl::BindVertexArray(my_vao);
                 gl::EnableVertexArrayAttrib(my_vao, 0);
                 simple_shader.activate();
                 gl::DrawElements(gl::TRIANGLES, (&indices).len() as i32, gl::UNSIGNED_INT, ptr::null());
-
-
             }
 
             // Display the new color buffer on the display
