@@ -200,8 +200,8 @@ fn main() {
         };
 
         // Used to demonstrate keyboard handling for exercise 2.
-        let mut position: glm::TVec3<f32> = glm::vec3(0.0, 0.0, 0.0);
-        let mut rotation: glm::TVec2<f32> = glm::vec2(0.0, 0.0);
+        let mut position = glm::vec3(0.0, 0.0, 0.0);
+        let mut rotation = glm::vec2(0.0, 0.0);
 
 
         // The main rendering loop
@@ -232,23 +232,35 @@ fn main() {
                         // The `VirtualKeyCode` enum is defined here:
                         //    https://docs.rs/winit/0.25.0/winit/event/enum.VirtualKeyCode.html
 
-                        VirtualKeyCode::A => { // Up (X)
+                        VirtualKeyCode::D => { // Right
                             position[0] += delta_time;
                         }
-                        VirtualKeyCode::D => { // Down (-X)
+                        VirtualKeyCode::A => { // Left
                             position[0] -= delta_time;
                         }
-                        VirtualKeyCode::W => { // Left (Y)
+                        VirtualKeyCode::W => { // Up
                             position[1] += delta_time;
                         }
-                        VirtualKeyCode::S => { // Right (-Y)
+                        VirtualKeyCode::S => { // Down
                             position[1] -= delta_time;
                         }
-                        VirtualKeyCode::LShift => { // Backwards (Z)
+                        VirtualKeyCode::LShift => { // Backwards
+                            position[2] -= delta_time;
+                        }
+                        VirtualKeyCode::Space => { // Forward
                             position[2] += delta_time;
                         }
-                        VirtualKeyCode::Space => { // Forward (-Z)
-                            position[2] -= delta_time;
+                        VirtualKeyCode::Left => { // Roll left
+                            rotation[1] -= delta_time;
+                        }
+                        VirtualKeyCode::Right => { // Roll right
+                            rotation[1] += delta_time;
+                        }
+                        VirtualKeyCode::Up => { // Roll Backwards
+                            rotation[0] -= delta_time;
+                        }
+                        VirtualKeyCode::Down => { // Roll Forwards
+                            rotation[0] += delta_time;
                         }
                         // default handler:
                         _ => { }
@@ -269,6 +281,8 @@ fn main() {
             transformation_matrix *= glm::perspective(1.0,PI / 2.0,1.0,100.0);
             transformation_matrix *= glm::translation(&glm::vec3(0.0, 0.0, -1.5));
             transformation_matrix *= glm::translation(&position);
+            transformation_matrix *= glm::rotation(rotation[0], &glm::vec3(1.0, 0.0, 0.0));
+            transformation_matrix *= glm::rotation(rotation[1], &glm::vec3(0.0, 1.0, 0.0));
 
             unsafe {
                 // Clear the color and depth buffers
@@ -349,7 +363,6 @@ fn main() {
                 // Handle Escape and Q keys separately
                 match keycode {
                     Escape => { *control_flow = ControlFlow::Exit; }
-                    Q      => { *control_flow = ControlFlow::Exit; }
                     _      => { }
                 }
             }
