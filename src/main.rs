@@ -9,6 +9,7 @@
 */
 extern crate nalgebra_glm as glm;
 use std::{ mem, ptr, os::raw::c_void };
+use std::f32::consts::PI;
 use std::thread;
 use std::sync::{Mutex, Arc, RwLock};
 
@@ -152,17 +153,17 @@ fn main() {
 
         // == // Set up your VAO around here
         let vertices: Vec<f32> = vec!{
-            -0.2, -0.7, 0.4,
-            0.2, -0.7, 0.4,
-            0.0, 0.1, 0.4,
+            -0.5, -0.2, 0.0,
+            0.5, -0.2, 0.0,
+            -0.5, 0.6, 0.0,
 
             -0.35, -0.1, 0.3,
             0.4, -0.1, 0.3,
             0.6, 0.35, 0.3,
 
-            -0.5, -0.2, 0.0,
-            0.5, -0.2, 0.0,
-            -0.5, 0.6, 0.0,
+            -0.2, -0.7, 0.4,
+            0.2, -0.7, 0.4,
+            0.0, 0.1, 0.4,
         };
 
         let indices: Vec<u32> = vec!{
@@ -194,9 +195,13 @@ fn main() {
                 .attach_file("./shaders/simple.vert")
                 .link()
         };
+        unsafe {
+            gl::UseProgram(simple_shader.program_id);
+        };
 
         // Used to demonstrate keyboard handling for exercise 2.
-        let mut _arbitrary_number = 0.0; // feel free to remove
+        let mut position: glm::TVec3<f32> = glm::vec3(0.0, 0.0, 0.0);
+        let mut rotation: glm::TVec2<f32> = glm::vec2(0.0, 0.0);
 
 
         // The main rendering loop
@@ -227,14 +232,24 @@ fn main() {
                         // The `VirtualKeyCode` enum is defined here:
                         //    https://docs.rs/winit/0.25.0/winit/event/enum.VirtualKeyCode.html
 
-                        VirtualKeyCode::A => {
-                            _arbitrary_number += delta_time;
+                        VirtualKeyCode::A => { // Up (X)
+                            position[0] += delta_time;
                         }
-                        VirtualKeyCode::D => {
-                            _arbitrary_number -= delta_time;
+                        VirtualKeyCode::D => { // Down (-X)
+                            position[0] -= delta_time;
                         }
-
-
+                        VirtualKeyCode::W => { // Left (Y)
+                            position[1] += delta_time;
+                        }
+                        VirtualKeyCode::S => { // Right (-Y)
+                            position[1] -= delta_time;
+                        }
+                        VirtualKeyCode::LShift => { // Backwards (Z)
+                            position[2] += delta_time;
+                        }
+                        VirtualKeyCode::Space => { // Forward (-Z)
+                            position[2] -= delta_time;
+                        }
                         // default handler:
                         _ => { }
                     }
@@ -251,10 +266,9 @@ fn main() {
 
             // == // Please compute camera transforms here (exercise 2 & 3)
             let mut transformation_matrix: glm::Mat4 = glm::identity();
-            let mut angle = 0.0;
-            // transformation_matrix *= glm::rotation(angle, &glm::vec3(1.0, 0.0, 0.0));
-            // transformation_matrix *=  glm::translation(&glm::vec3(0.0, 1.0, 0.0));
-            // transformation_matrix *=  glm::scaling(&glm::vec3(1.0, 1.0, 1.0));
+            transformation_matrix *= glm::perspective(1.0,PI / 2.0,1.0,100.0);
+            transformation_matrix *= glm::translation(&glm::vec3(0.0, 0.0, -1.5));
+            transformation_matrix *= glm::translation(&position);
 
             unsafe {
                 // Clear the color and depth buffers
@@ -265,7 +279,6 @@ fn main() {
                 // == // Issue the necessary gl:: commands to draw your scene here
                 gl::BindVertexArray(my_vao);
                 gl::EnableVertexArrayAttrib(my_vao, 0);
-                simple_shader.activate();
                 gl::DrawElements(gl::TRIANGLES, (&indices).len() as i32, gl::UNSIGNED_INT, ptr::null());
             }
 
