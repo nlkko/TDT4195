@@ -43,3 +43,9 @@ b) <br>
 c) <br>
 In order to achieve rotation transformation it would require the use of the values a,b,d,e.
 As well as calculating the angles using trigonometric functions.
+
+Task 4: Combinations of Transformations <br>
+b) iv) <br>
+We have used the following keybinds: <br>
+> **_WASD_**, **_Space_** and **_LShift_** for **_movement_** <br>
+> **_Arrow keys_** for **_rotation_**

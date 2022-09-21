@@ -233,16 +233,16 @@ fn main() {
                         //    https://docs.rs/winit/0.25.0/winit/event/enum.VirtualKeyCode.html
 
                         VirtualKeyCode::D => { // Right
-                            position[0] += delta_time;
-                        }
-                        VirtualKeyCode::A => { // Left
                             position[0] -= delta_time;
                         }
+                        VirtualKeyCode::A => { // Left
+                            position[0] += delta_time;
+                        }
                         VirtualKeyCode::W => { // Up
-                            position[1] += delta_time;
+                            position[1] -= delta_time;
                         }
                         VirtualKeyCode::S => { // Down
-                            position[1] -= delta_time;
+                            position[1] += delta_time;
                         }
                         VirtualKeyCode::LShift => { // Backwards
                             position[2] -= delta_time;
@@ -251,16 +251,16 @@ fn main() {
                             position[2] += delta_time;
                         }
                         VirtualKeyCode::Left => { // Roll left
-                            rotation[1] -= delta_time;
-                        }
-                        VirtualKeyCode::Right => { // Roll right
                             rotation[1] += delta_time;
                         }
+                        VirtualKeyCode::Right => { // Roll right
+                            rotation[1] -= delta_time;
+                        }
                         VirtualKeyCode::Up => { // Roll Backwards
-                            rotation[0] -= delta_time;
+                            rotation[0] += delta_time;
                         }
                         VirtualKeyCode::Down => { // Roll Forwards
-                            rotation[0] += delta_time;
+                            rotation[0] -= delta_time;
                         }
                         // default handler:
                         _ => { }
