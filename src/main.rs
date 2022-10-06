@@ -15,9 +15,12 @@ use std::sync::{Mutex, Arc, RwLock};
 
 mod shader;
 mod util;
+mod mesh;
+mod toolbox;
 
 use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState::{Pressed, Released}, VirtualKeyCode::{self, *}};
 use glutin::event_loop::ControlFlow;
+use crate::mesh::Mesh;
 
 // initial window size
 const INITIAL_SCREEN_W: u32 = 800;
@@ -55,7 +58,6 @@ fn offset<T>(n: u32) -> *const c_void {
 
 // == // Generate your VAO here
 unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colours: &Vec<f32>) -> u32 {
-    //https://github.com/TreeForTwo/gloom-rs/blob/master/src/main.rs
 
     let mut vao_id: u32 = 0;
     let mut vbo_id: u32 = 0;
@@ -151,42 +153,9 @@ fn main() {
             println!("GLSL\t: {}", util::get_gl_string(gl::SHADING_LANGUAGE_VERSION));
         }
 
-        // == // Set up your VAO around here
-        let vertices: Vec<f32> = vec!{
-            -0.5, -0.2, 0.0,
-            0.5, -0.2, 0.0,
-            -0.5, 0.6, 0.0,
+        let lunarsurface:Mesh = mesh::Terrain::load("resources/lunarsurface.obj");
 
-            -0.35, -0.1, 0.3,
-            0.4, -0.1, 0.3,
-            0.6, 0.35, 0.3,
-
-            -0.2, -0.7, 0.4,
-            0.2, -0.7, 0.4,
-            0.0, 0.1, 0.4,
-        };
-
-        let indices: Vec<u32> = vec!{
-            0, 1, 2,
-            3, 4, 5,
-            6, 7, 8
-        };
-
-        let colours: Vec<f32> = vec!{
-            1.0, 0.0, 0.0, 0.3,
-            1.0, 0.0, 0.0, 0.3,
-            1.0, 0.0, 0.0, 0.3,
-
-            0.0, 1.0, 0.0, 0.2,
-            0.0, 1.0, 0.0, 0.2,
-            0.0, 1.0, 0.0, 0.2,
-
-            0.0, 0.0, 1.0, 0.4,
-            0.0, 0.0, 1.0, 0.4,
-            0.0, 0.0, 1.0, 0.4,
-        };
-
-        let my_vao = unsafe { create_vao(&vertices, &indices, &colours) };
+        let lunar_vao = unsafe { create_vao(&lunarsurface.vertices, &lunarsurface.indices, &lunarsurface.colors) };
 
         // Shaders here
         let simple_shader = unsafe {
@@ -278,7 +247,7 @@ fn main() {
 
             // == // Please compute camera transforms here (exercise 2 & 3)
             let mut transformation_matrix: glm::Mat4 = glm::identity();
-            transformation_matrix *= glm::perspective(1.0,PI / 2.0,1.0,100.0);
+            transformation_matrix *= glm::perspective(1.0,PI / 2.0,1.0,1000.0);
             transformation_matrix *= glm::translation(&glm::vec3(0.0, 0.0, -1.5));
             transformation_matrix *= glm::translation(&position);
             transformation_matrix *= glm::rotation(rotation[0], &glm::vec3(1.0, 0.0, 0.0)) * glm::rotation(rotation[1], &glm::vec3(0.0, 1.0, 0.0));;
@@ -290,9 +259,8 @@ fn main() {
                 gl::UniformMatrix4fv(2, 1, gl::FALSE, transformation_matrix.as_ptr());
 
                 // == // Issue the necessary gl:: commands to draw your scene here
-                gl::BindVertexArray(my_vao);
-                gl::EnableVertexArrayAttrib(my_vao, 0);
-                gl::DrawElements(gl::TRIANGLES, (&indices).len() as i32, gl::UNSIGNED_INT, ptr::null());
+                gl::BindVertexArray(lunar_vao);
+                gl::DrawElements(gl::TRIANGLES, (&lunarsurface.indices).len() as i32, gl::UNSIGNED_INT, ptr::null());
             }
 
             // Display the new color buffer on the display
