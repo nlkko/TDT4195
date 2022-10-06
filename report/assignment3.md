@@ -8,3 +8,11 @@ c) <br>
 ![](images3/task1c.png){height=15em}
 <br>
 d) <br>
+![](images3/task1d.png){height=15em}
+<br>
+
+Task 2: Helicopter Parenting <br>
+
+c) <br>
+![](images3/task2c.png){height=15em}
+<br>
