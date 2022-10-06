@@ -57,12 +57,13 @@ fn offset<T>(n: u32) -> *const c_void {
 
 
 // == // Generate your VAO here
-unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colours: &Vec<f32>) -> u32 {
+unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colours: &Vec<f32>, normals: &Vec<f32>) -> u32 {
 
     let mut vao_id: u32 = 0;
     let mut vbo_id: u32 = 0;
     let mut ibo_id: u32 = 0;
     let mut vbo_colour_id: u32 = 0;
+    let mut vbo_normals_id: u32 = 0;
 
     // * VAO
     gl::GenVertexArrays(1, &mut vao_id);
@@ -88,6 +89,13 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colours: &Vec<f32>
     gl::BufferData(gl::ARRAY_BUFFER, byte_size_of_array(&colours), pointer_to_array(&colours), gl::STATIC_DRAW);
     gl::VertexAttribPointer(1, 4, gl::FLOAT, gl::FALSE, 0, ptr::null());
     gl::EnableVertexAttribArray(1);
+
+    // Light
+    gl::GenBuffers(1, &mut vbo_normals_id);
+    gl::BindBuffer(gl::ARRAY_BUFFER, vbo_normals_id);
+    gl::BufferData(gl::ARRAY_BUFFER, byte_size_of_array(&normals), pointer_to_array(&normals), gl::STATIC_DRAW);
+    gl::VertexAttribPointer(3, 3, gl::FLOAT, gl::FALSE, 0, ptr::null());
+    gl::EnableVertexAttribArray(3);
 
     // * Return the ID of the VAO
     vao_id
@@ -155,7 +163,14 @@ fn main() {
 
         let lunarsurface:Mesh = mesh::Terrain::load("resources/lunarsurface.obj");
 
-        let lunar_vao = unsafe { create_vao(&lunarsurface.vertices, &lunarsurface.indices, &lunarsurface.colors) };
+        let lunar_vao = unsafe {
+            create_vao(
+                &lunarsurface.vertices,
+                &lunarsurface.indices,
+                &lunarsurface.colors,
+                &lunarsurface.normals
+            )
+        };
 
         // Shaders here
         let simple_shader = unsafe {
