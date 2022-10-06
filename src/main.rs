@@ -17,10 +17,12 @@ mod shader;
 mod util;
 mod mesh;
 mod toolbox;
+mod scene_graph;
 
 use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState::{Pressed, Released}, VirtualKeyCode::{self, *}};
 use glutin::event_loop::ControlFlow;
 use crate::mesh::Mesh;
+use scene_graph::SceneNode;
 
 // initial window size
 const INITIAL_SCREEN_W: u32 = 800;
@@ -161,16 +163,16 @@ fn main() {
             println!("GLSL\t: {}", util::get_gl_string(gl::SHADING_LANGUAGE_VERSION));
         }
 
-        let lunarsurface:Mesh = mesh::Terrain::load("resources/lunarsurface.obj");
+        let lunarsurface = mesh::Terrain::load("resources/lunarsurface.obj");
+        let helicopter = mesh::Helicopter::load("resources/helicopter.obj");
 
-        let lunar_vao = unsafe {
-            create_vao(
-                &lunarsurface.vertices,
-                &lunarsurface.indices,
-                &lunarsurface.colors,
-                &lunarsurface.normals
-            )
-        };
+        let lunar_vao = unsafe { create_vao(&lunarsurface.vertices, &lunarsurface.indices, &lunarsurface.colors, &lunarsurface.normals)};
+        let helicopter_body = unsafe { create_vao(&helicopter.body.vertices, &helicopter.body.indices, &helicopter.body.colors, &helicopter.body.normals)};
+        let helicopter_door = unsafe { create_vao(&helicopter.door.vertices, &helicopter.door.indices, &helicopter.door.colors, &helicopter.door.normals)};
+        let helicopter_main_rotor = unsafe { create_vao(&helicopter.main_rotor.vertices, &helicopter.main_rotor.indices, &helicopter.main_rotor.colors, &helicopter.main_rotor.normals)};
+        let helicopter_tail_rotor = unsafe { create_vao(&helicopter.tail_rotor.vertices, &helicopter.tail_rotor.indices, &helicopter.tail_rotor.colors, &helicopter.tail_rotor.normals)};
+
+
 
         // Shaders here
         let simple_shader = unsafe {
@@ -195,7 +197,7 @@ fn main() {
             // Compute time passed since the previous frame and since the start of the program
             let now = std::time::Instant::now();
             let elapsed = now.duration_since(first_frame_time).as_secs_f32();
-            let delta_time = now.duration_since(prevous_frame_time).as_secs_f32() * 10.0;
+            let delta_time = now.duration_since(prevous_frame_time).as_secs_f32() * 30.0;
             prevous_frame_time = now;
 
             // Handle resize events
@@ -222,29 +224,29 @@ fn main() {
                         VirtualKeyCode::A => { // Left
                             position[0] += delta_time;
                         }
-                        VirtualKeyCode::W => { // Up
+                        VirtualKeyCode::Space => { // Up
                             position[1] -= delta_time;
                         }
-                        VirtualKeyCode::S => { // Down
+                        VirtualKeyCode::LShift => { // Down
                             position[1] += delta_time;
                         }
-                        VirtualKeyCode::LShift => { // Backwards
+                        VirtualKeyCode::S => { // Backwards
                             position[2] -= delta_time;
                         }
-                        VirtualKeyCode::Space => { // Forward
+                        VirtualKeyCode::W => { // Forward
                             position[2] += delta_time;
                         }
                         VirtualKeyCode::Right => { // Roll right
-                            rotation[1] += delta_time;
+                            rotation[1] += delta_time / 30.0;
                         }
                         VirtualKeyCode::Left => { // Roll left
-                            rotation[1] -= delta_time;
+                            rotation[1] -= delta_time / 30.0;
                         }
                         VirtualKeyCode::Up => { // Roll Backwards
-                            rotation[0] += delta_time;
+                            rotation[0] += delta_time / 30.0;
                         }
                         VirtualKeyCode::Down => { // Roll Forwards
-                            rotation[0] -= delta_time;
+                            rotation[0] -= delta_time / 30.0;
                         }
                         // default handler:
                         _ => { }
@@ -276,6 +278,18 @@ fn main() {
                 // == // Issue the necessary gl:: commands to draw your scene here
                 gl::BindVertexArray(lunar_vao);
                 gl::DrawElements(gl::TRIANGLES, lunarsurface.index_count, gl::UNSIGNED_INT, ptr::null());
+
+                gl::BindVertexArray(helicopter_body);
+                gl::DrawElements(gl::TRIANGLES, helicopter.body.index_count, gl::UNSIGNED_INT, ptr::null());
+
+                gl::BindVertexArray(helicopter_door);
+                gl::DrawElements(gl::TRIANGLES, helicopter.door.index_count, gl::UNSIGNED_INT, ptr::null());
+
+                gl::BindVertexArray(helicopter_main_rotor);
+                gl::DrawElements(gl::TRIANGLES, helicopter.main_rotor.index_count, gl::UNSIGNED_INT, ptr::null());
+
+                gl::BindVertexArray(helicopter_tail_rotor);
+                gl::DrawElements(gl::TRIANGLES, helicopter.tail_rotor.index_count, gl::UNSIGNED_INT, ptr::null());
             }
 
             // Display the new color buffer on the display
