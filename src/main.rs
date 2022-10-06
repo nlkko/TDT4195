@@ -195,7 +195,7 @@ fn main() {
             // Compute time passed since the previous frame and since the start of the program
             let now = std::time::Instant::now();
             let elapsed = now.duration_since(first_frame_time).as_secs_f32();
-            let delta_time = now.duration_since(prevous_frame_time).as_secs_f32();
+            let delta_time = now.duration_since(prevous_frame_time).as_secs_f32() * 10.0;
             prevous_frame_time = now;
 
             // Handle resize events
@@ -234,10 +234,10 @@ fn main() {
                         VirtualKeyCode::Space => { // Forward
                             position[2] += delta_time;
                         }
-                        VirtualKeyCode::Left => { // Roll left
+                        VirtualKeyCode::Right => { // Roll right
                             rotation[1] += delta_time;
                         }
-                        VirtualKeyCode::Right => { // Roll right
+                        VirtualKeyCode::Left => { // Roll left
                             rotation[1] -= delta_time;
                         }
                         VirtualKeyCode::Up => { // Roll Backwards
@@ -275,7 +275,7 @@ fn main() {
 
                 // == // Issue the necessary gl:: commands to draw your scene here
                 gl::BindVertexArray(lunar_vao);
-                gl::DrawElements(gl::TRIANGLES, (&lunarsurface.indices).len() as i32, gl::UNSIGNED_INT, ptr::null());
+                gl::DrawElements(gl::TRIANGLES, lunarsurface.index_count, gl::UNSIGNED_INT, ptr::null());
             }
 
             // Display the new color buffer on the display
