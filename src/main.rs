@@ -24,6 +24,7 @@ use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState
 use glutin::event_loop::ControlFlow;
 use crate::mesh::Mesh;
 use scene_graph::SceneNode;
+use crate::toolbox::simple_heading_animation;
 
 // initial window size
 const INITIAL_SCREEN_W: u32 = 800;
@@ -105,27 +106,27 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colours: &Vec<f32>
 }
 
 unsafe fn draw_scene(node: &scene_graph::SceneNode, view_projection_matrix: &glm::Mat4, transformation_so_far: &glm::Mat4) {
+
+    let mut transformation_matrix: glm::Mat4 = glm::identity();
+    transformation_matrix *= transformation_so_far;
+    transformation_matrix *= glm::translation(&node.position);
+    transformation_matrix *= glm::translation(&node.reference_point);
+    transformation_matrix *= glm::rotation(node.rotation[0], &glm::vec3(1.0, 0.0, 0.0));
+    transformation_matrix *= glm::rotation(node.rotation[1], &glm::vec3(0.0, 1.0, 0.0));
+    transformation_matrix *= glm::rotation(node.rotation[2], &glm::vec3(0.0, 0.0, 1.0));
+    transformation_matrix *= glm::inverse(&glm::translation(&node.reference_point));
+
     // Check if node is drawable, if so: set uniforms and draw
     if node.index_count > 0 {
-        let uniform_matrix = view_projection_matrix * transformation_so_far;
+        let uniform_matrix = view_projection_matrix * transformation_matrix;
         gl::UniformMatrix4fv(2, 1, gl::FALSE, uniform_matrix.as_ptr());
         gl::BindVertexArray(node.vao_id);
         gl::DrawElements(gl::TRIANGLES, node.index_count, gl::UNSIGNED_INT, ptr::null());
     }
 
-    // Calculate transformation matrix
-    let mut transformation_matrix: glm::Mat4 = glm::identity();
-    transformation_matrix *= glm::translation(&node.position);
-    transformation_matrix *= glm::translation(&node.reference_point);
-    transformation_matrix *= glm::rotation(node.rotation[0], &glm::vec3(1.0, 0.0, 0.0)); // rotate x
-    transformation_matrix *= glm::rotation(node.rotation[1], &glm::vec3(0.0, 1.0, 0.0)); // rotate y
-    transformation_matrix *= glm::rotation(node.rotation[2], &glm::vec3(0.0, 0.0, 1.0)); // rotate z
-
-    let mut combined_matrix: glm::Mat4 = transformation_matrix * transformation_so_far;
-
     // Recurse
     for &child in &node.children {
-        draw_scene(&*child, view_projection_matrix, &combined_matrix);
+        draw_scene(&*child, view_projection_matrix, &transformation_matrix);
     }
 }
 
@@ -205,11 +206,11 @@ fn main() {
         let mut main_rotor_scene = SceneNode::from_vao(helicopter_main_rotor, helicopter.main_rotor.index_count);
         let mut tail_rotor_scene = SceneNode::from_vao(helicopter_tail_rotor, helicopter.tail_rotor.index_count);
 
-        root.reference_point = glm::vec3(0.0, 0.0, 0.0);
-        lunar_scene.reference_point = glm::vec3(0.0, 0.0, 0.0);
-        body_scene.reference_point = glm::vec3(0.0, 0.0, 0.0);
-        door_scene.reference_point = glm::vec3(0.0, 0.0, 0.0);
-        main_rotor_scene.reference_point = glm::vec3(0.0, 0.0, 0.0);
+        body_scene.position = glm::vec3(10.0, 0.0, 0.0);
+
+        main_rotor_scene.rotation = glm::vec3(0.0, 2.0, 0.0);
+        tail_rotor_scene.rotation = glm::vec3(1.0, 0.0, 0.0);
+
         tail_rotor_scene.reference_point = glm::vec3(0.35, 2.3, 10.4);
 
         root.add_child(&lunar_scene);
@@ -242,7 +243,7 @@ fn main() {
             // Compute time passed since the previous frame and since the start of the program
             let now = std::time::Instant::now();
             let elapsed = now.duration_since(first_frame_time).as_secs_f32();
-            let delta_time = now.duration_since(prevous_frame_time).as_secs_f32() * 30.0;
+            let delta_time = now.duration_since(prevous_frame_time).as_secs_f32();
             prevous_frame_time = now;
 
             // Handle resize events
@@ -264,34 +265,34 @@ fn main() {
                         //    https://docs.rs/winit/0.25.0/winit/event/enum.VirtualKeyCode.html
 
                         VirtualKeyCode::D => { // Right
-                            position[0] -= delta_time;
+                            position[0] -= delta_time * 30.0;
                         }
                         VirtualKeyCode::A => { // Left
-                            position[0] += delta_time;
+                            position[0] += delta_time * 30.0;
                         }
                         VirtualKeyCode::Space => { // Up
-                            position[1] -= delta_time;
+                            position[1] -= delta_time * 30.0;
                         }
                         VirtualKeyCode::LShift => { // Down
-                            position[1] += delta_time;
+                            position[1] += delta_time * 30.0;
                         }
                         VirtualKeyCode::S => { // Backwards
-                            position[2] -= delta_time;
+                            position[2] -= delta_time * 30.0;
                         }
                         VirtualKeyCode::W => { // Forward
-                            position[2] += delta_time;
+                            position[2] += delta_time * 30.0;
                         }
                         VirtualKeyCode::Right => { // Roll right
-                            rotation[1] += delta_time / 30.0;
+                            rotation[1] += delta_time;
                         }
                         VirtualKeyCode::Left => { // Roll left
-                            rotation[1] -= delta_time / 30.0;
+                            rotation[1] -= delta_time;
                         }
                         VirtualKeyCode::Up => { // Roll Backwards
-                            rotation[0] += delta_time / 30.0;
+                            rotation[0] += delta_time;
                         }
                         VirtualKeyCode::Down => { // Roll Forwards
-                            rotation[0] -= delta_time / 30.0;
+                            rotation[0] -= delta_time;
                         }
                         // default handler:
                         _ => { }
@@ -312,14 +313,24 @@ fn main() {
             transformation_matrix *= glm::perspective(1.0,PI / 2.0,1.0,1000.0);
             transformation_matrix *= glm::translation(&glm::vec3(0.0, 0.0, -1.5));
             transformation_matrix *= glm::translation(&position);
-            transformation_matrix *= glm::rotation(rotation[0], &glm::vec3(1.0, 0.0, 0.0)) * glm::rotation(rotation[1], &glm::vec3(0.0, 1.0, 0.0));;
+            transformation_matrix *= glm::rotation(rotation[0], &glm::vec3(1.0, 0.0, 0.0)) * glm::rotation(rotation[1], &glm::vec3(0.0, 1.0, 0.0));
 
             unsafe {
                 // Clear the color and depth buffers
                 gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky, full opacity
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-                body_scene.position = glm::vec3(10.0, 0.0, 0.0);;
+                main_rotor_scene.rotation += glm::vec3(0.0, delta_time * 5.0, 0.0);
+                tail_rotor_scene.rotation += glm::vec3(delta_time * 5.0, 0.0, 0.0);
+
+                let animation = simple_heading_animation(elapsed);
+                body_scene.position[0] = animation.x;
+                body_scene.position[1] = 0.0;
+                body_scene.position[2] = animation.z;
+                body_scene.rotation[0] = animation.pitch;
+                body_scene.rotation[1] = animation.yaw;
+                body_scene.rotation[2] = animation.roll;
+
                 let mut temp: glm::Mat4 = glm::identity();
                 draw_scene(&root, &transformation_matrix, &temp);
             }
