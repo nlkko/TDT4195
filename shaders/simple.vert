@@ -5,7 +5,7 @@ layout(location=1) in vec4 in_olour;
 layout(location=1) out vec4 out_colour;
 uniform layout(location=2) mat4 transformation_matrix;
 layout(location=3) in vec3 in_normals;
-layout(location=3) in vec3 out_normals;
+layout(location=3) out vec3 out_normals;
 
 void main()
 {
