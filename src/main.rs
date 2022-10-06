@@ -12,6 +12,7 @@ use std::{ mem, ptr, os::raw::c_void };
 use std::f32::consts::PI;
 use std::thread;
 use std::sync::{Mutex, Arc, RwLock};
+use glm::Mat4;
 
 mod shader;
 mod util;
@@ -103,6 +104,20 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colours: &Vec<f32>
     vao_id
 }
 
+unsafe fn draw_scene(node: &scene_graph::SceneNode, view_projection_matrix: &glm::Mat4, transformation_so_far: &glm::Mat4) {
+    // Check if node is drawable, if so: set uniforms and draw
+    if node.index_count > 0 {
+        gl::UniformMatrix4fv(2, 1, gl::FALSE, view_projection_matrix.as_ptr());
+        gl::BindVertexArray(node.vao_id);
+        gl::DrawElements(gl::TRIANGLES, node.index_count, gl::UNSIGNED_INT, ptr::null());
+    }
+
+    // Recurse
+    for &child in &node.children {
+        draw_scene(&*child, view_projection_matrix, transformation_so_far);
+    }
+}
+
 
 fn main() {
     // Set up the necessary objects to deal with windows and event handling
@@ -172,6 +187,18 @@ fn main() {
         let helicopter_main_rotor = unsafe { create_vao(&helicopter.main_rotor.vertices, &helicopter.main_rotor.indices, &helicopter.main_rotor.colors, &helicopter.main_rotor.normals)};
         let helicopter_tail_rotor = unsafe { create_vao(&helicopter.tail_rotor.vertices, &helicopter.tail_rotor.indices, &helicopter.tail_rotor.colors, &helicopter.tail_rotor.normals)};
 
+        let mut root = SceneNode::new();
+        let mut lunar_scene = SceneNode::from_vao(lunar_vao, lunarsurface.index_count);
+        let mut body_scene = SceneNode::from_vao(helicopter_body, helicopter.body.index_count);
+        let mut door_scene = SceneNode::from_vao(helicopter_door, helicopter.door.index_count);
+        let mut main_rotor_scene = SceneNode::from_vao(helicopter_main_rotor, helicopter.main_rotor.index_count);
+        let mut door_tail_rotor = SceneNode::from_vao(helicopter_tail_rotor, helicopter.tail_rotor.index_count);
+
+        root.add_child(&lunar_scene);
+        lunar_scene.add_child(&body_scene);
+        body_scene.add_child(&door_scene);
+        body_scene.add_child(&main_rotor_scene);
+        body_scene.add_child(&door_tail_rotor);
 
 
         // Shaders here
@@ -273,23 +300,9 @@ fn main() {
                 // Clear the color and depth buffers
                 gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky, full opacity
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-                gl::UniformMatrix4fv(2, 1, gl::FALSE, transformation_matrix.as_ptr());
 
-                // == // Issue the necessary gl:: commands to draw your scene here
-                gl::BindVertexArray(lunar_vao);
-                gl::DrawElements(gl::TRIANGLES, lunarsurface.index_count, gl::UNSIGNED_INT, ptr::null());
-
-                gl::BindVertexArray(helicopter_body);
-                gl::DrawElements(gl::TRIANGLES, helicopter.body.index_count, gl::UNSIGNED_INT, ptr::null());
-
-                gl::BindVertexArray(helicopter_door);
-                gl::DrawElements(gl::TRIANGLES, helicopter.door.index_count, gl::UNSIGNED_INT, ptr::null());
-
-                gl::BindVertexArray(helicopter_main_rotor);
-                gl::DrawElements(gl::TRIANGLES, helicopter.main_rotor.index_count, gl::UNSIGNED_INT, ptr::null());
-
-                gl::BindVertexArray(helicopter_tail_rotor);
-                gl::DrawElements(gl::TRIANGLES, helicopter.tail_rotor.index_count, gl::UNSIGNED_INT, ptr::null());
+                let mut temp: glm::Mat4 = glm::identity();
+                draw_scene(&root, &transformation_matrix, &temp);
             }
 
             // Display the new color buffer on the display
