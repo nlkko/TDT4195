@@ -12,7 +12,7 @@ use std::{ mem, ptr, os::raw::c_void };
 use std::f32::consts::PI;
 use std::thread;
 use std::sync::{Mutex, Arc, RwLock};
-use glm::Mat4;
+use glm::{Mat4, Vec3};
 
 mod shader;
 mod util;
@@ -107,14 +107,25 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colours: &Vec<f32>
 unsafe fn draw_scene(node: &scene_graph::SceneNode, view_projection_matrix: &glm::Mat4, transformation_so_far: &glm::Mat4) {
     // Check if node is drawable, if so: set uniforms and draw
     if node.index_count > 0 {
-        gl::UniformMatrix4fv(2, 1, gl::FALSE, view_projection_matrix.as_ptr());
+        let uniform_matrix = view_projection_matrix * transformation_so_far;
+        gl::UniformMatrix4fv(2, 1, gl::FALSE, uniform_matrix.as_ptr());
         gl::BindVertexArray(node.vao_id);
         gl::DrawElements(gl::TRIANGLES, node.index_count, gl::UNSIGNED_INT, ptr::null());
     }
 
+    // Calculate transformation matrix
+    let mut transformation_matrix: glm::Mat4 = glm::identity();
+    transformation_matrix *= glm::translation(&node.position);
+    transformation_matrix *= glm::translation(&node.reference_point);
+    transformation_matrix *= glm::rotation(node.rotation[0], &glm::vec3(1.0, 0.0, 0.0)); // rotate x
+    transformation_matrix *= glm::rotation(node.rotation[1], &glm::vec3(0.0, 1.0, 0.0)); // rotate y
+    transformation_matrix *= glm::rotation(node.rotation[2], &glm::vec3(0.0, 0.0, 1.0)); // rotate z
+
+    let mut combined_matrix: glm::Mat4 = transformation_matrix * transformation_so_far;
+
     // Recurse
     for &child in &node.children {
-        draw_scene(&*child, view_projection_matrix, transformation_so_far);
+        draw_scene(&*child, view_projection_matrix, &combined_matrix);
     }
 }
 
@@ -192,13 +203,20 @@ fn main() {
         let mut body_scene = SceneNode::from_vao(helicopter_body, helicopter.body.index_count);
         let mut door_scene = SceneNode::from_vao(helicopter_door, helicopter.door.index_count);
         let mut main_rotor_scene = SceneNode::from_vao(helicopter_main_rotor, helicopter.main_rotor.index_count);
-        let mut door_tail_rotor = SceneNode::from_vao(helicopter_tail_rotor, helicopter.tail_rotor.index_count);
+        let mut tail_rotor_scene = SceneNode::from_vao(helicopter_tail_rotor, helicopter.tail_rotor.index_count);
+
+        root.reference_point = glm::vec3(0.0, 0.0, 0.0);
+        lunar_scene.reference_point = glm::vec3(0.0, 0.0, 0.0);
+        body_scene.reference_point = glm::vec3(0.0, 0.0, 0.0);
+        door_scene.reference_point = glm::vec3(0.0, 0.0, 0.0);
+        main_rotor_scene.reference_point = glm::vec3(0.0, 0.0, 0.0);
+        tail_rotor_scene.reference_point = glm::vec3(0.35, 2.3, 10.4);
 
         root.add_child(&lunar_scene);
         lunar_scene.add_child(&body_scene);
         body_scene.add_child(&door_scene);
         body_scene.add_child(&main_rotor_scene);
-        body_scene.add_child(&door_tail_rotor);
+        body_scene.add_child(&tail_rotor_scene);
 
 
         // Shaders here
@@ -301,6 +319,7 @@ fn main() {
                 gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky, full opacity
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
+                body_scene.position = glm::vec3(10.0, 0.0, 0.0);;
                 let mut temp: glm::Mat4 = glm::identity();
                 draw_scene(&root, &transformation_matrix, &temp);
             }
