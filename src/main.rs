@@ -199,7 +199,7 @@ fn main() {
         let mut lunar_scene = SceneNode::from_vao(lunar_vao, lunarsurface.index_count);
 
         let mut helicopters: Vec<scene_graph::Node> = Vec::new();
-        let number_of_helicopters = 10;
+        let number_of_helicopters = 11;
         for i in 0..number_of_helicopters {
             let helicopter_body = unsafe { create_vao(&helicopter.body.vertices, &helicopter.body.indices, &helicopter.body.colors, &helicopter.body.normals) };
             let helicopter_door = unsafe { create_vao(&helicopter.door.vertices, &helicopter.door.indices, &helicopter.door.colors, &helicopter.door.normals) };
@@ -211,8 +211,6 @@ fn main() {
             let mut door_scene = SceneNode::from_vao(helicopter_door, helicopter.door.index_count);
             let mut main_rotor_scene = SceneNode::from_vao(helicopter_main_rotor, helicopter.main_rotor.index_count);
             let mut tail_rotor_scene = SceneNode::from_vao(helicopter_tail_rotor, helicopter.tail_rotor.index_count);
-
-            body_scene.position = glm::vec3(10.0 * i as f32, 0.0, 0.0);
 
             main_rotor_scene.rotation = glm::vec3(0.0, 2.0, 0.0);
             tail_rotor_scene.rotation = glm::vec3(1.0, 0.0, 0.0);
@@ -333,9 +331,9 @@ fn main() {
                     helicopters[i][1].rotation += glm::vec3(0.0, delta_time * 5.0, 0.0);
                     helicopters[i][2].rotation += glm::vec3(delta_time * 5.0, 0.0, 0.0);
 
-                    helicopters[i].position[0] = animation.x;
-                    helicopters[i].position[1] = 0.0;
-                    helicopters[i].position[2] = animation.z;
+                    helicopters[i].position[0] = animation.x + (i % (number_of_helicopters / 3)) as f32 * 15.0;
+                    helicopters[i].position[1] = 10.0;
+                    helicopters[i].position[2] = animation.z + (i % number_of_helicopters) as f32 * 15.0;
                     helicopters[i].rotation[0] = animation.pitch;
                     helicopters[i].rotation[1] = animation.yaw;
                     helicopters[i].rotation[2] = animation.roll;
