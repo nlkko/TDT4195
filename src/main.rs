@@ -194,32 +194,39 @@ fn main() {
         let lunarsurface = mesh::Terrain::load("resources/lunarsurface.obj");
         let helicopter = mesh::Helicopter::load("resources/helicopter.obj");
 
-        let lunar_vao = unsafe { create_vao(&lunarsurface.vertices, &lunarsurface.indices, &lunarsurface.colors, &lunarsurface.normals)};
-        let helicopter_body = unsafe { create_vao(&helicopter.body.vertices, &helicopter.body.indices, &helicopter.body.colors, &helicopter.body.normals)};
-        let helicopter_door = unsafe { create_vao(&helicopter.door.vertices, &helicopter.door.indices, &helicopter.door.colors, &helicopter.door.normals)};
-        let helicopter_main_rotor = unsafe { create_vao(&helicopter.main_rotor.vertices, &helicopter.main_rotor.indices, &helicopter.main_rotor.colors, &helicopter.main_rotor.normals)};
-        let helicopter_tail_rotor = unsafe { create_vao(&helicopter.tail_rotor.vertices, &helicopter.tail_rotor.indices, &helicopter.tail_rotor.colors, &helicopter.tail_rotor.normals)};
-
+        let lunar_vao = unsafe { create_vao(&lunarsurface.vertices, &lunarsurface.indices, &lunarsurface.colors, &lunarsurface.normals) };
         let mut root = SceneNode::new();
         let mut lunar_scene = SceneNode::from_vao(lunar_vao, lunarsurface.index_count);
-        let mut body_scene = SceneNode::from_vao(helicopter_body, helicopter.body.index_count);
-        let mut door_scene = SceneNode::from_vao(helicopter_door, helicopter.door.index_count);
-        let mut main_rotor_scene = SceneNode::from_vao(helicopter_main_rotor, helicopter.main_rotor.index_count);
-        let mut tail_rotor_scene = SceneNode::from_vao(helicopter_tail_rotor, helicopter.tail_rotor.index_count);
 
-        body_scene.position = glm::vec3(10.0, 0.0, 0.0);
+        let mut helicopters: Vec<scene_graph::Node> = Vec::new();
+        let number_of_helicopters = 10;
+        for i in 0..number_of_helicopters {
+            let helicopter_body = unsafe { create_vao(&helicopter.body.vertices, &helicopter.body.indices, &helicopter.body.colors, &helicopter.body.normals) };
+            let helicopter_door = unsafe { create_vao(&helicopter.door.vertices, &helicopter.door.indices, &helicopter.door.colors, &helicopter.door.normals) };
+            let helicopter_main_rotor = unsafe { create_vao(&helicopter.main_rotor.vertices, &helicopter.main_rotor.indices, &helicopter.main_rotor.colors, &helicopter.main_rotor.normals) };
+            let helicopter_tail_rotor = unsafe { create_vao(&helicopter.tail_rotor.vertices, &helicopter.tail_rotor.indices, &helicopter.tail_rotor.colors, &helicopter.tail_rotor.normals) };
 
-        main_rotor_scene.rotation = glm::vec3(0.0, 2.0, 0.0);
-        tail_rotor_scene.rotation = glm::vec3(1.0, 0.0, 0.0);
 
-        tail_rotor_scene.reference_point = glm::vec3(0.35, 2.3, 10.4);
+            let mut body_scene = SceneNode::from_vao(helicopter_body, helicopter.body.index_count);
+            let mut door_scene = SceneNode::from_vao(helicopter_door, helicopter.door.index_count);
+            let mut main_rotor_scene = SceneNode::from_vao(helicopter_main_rotor, helicopter.main_rotor.index_count);
+            let mut tail_rotor_scene = SceneNode::from_vao(helicopter_tail_rotor, helicopter.tail_rotor.index_count);
 
-        root.add_child(&lunar_scene);
-        lunar_scene.add_child(&body_scene);
-        body_scene.add_child(&door_scene);
-        body_scene.add_child(&main_rotor_scene);
-        body_scene.add_child(&tail_rotor_scene);
+            body_scene.position = glm::vec3(10.0 * i as f32, 0.0, 0.0);
 
+            main_rotor_scene.rotation = glm::vec3(0.0, 2.0, 0.0);
+            tail_rotor_scene.rotation = glm::vec3(1.0, 0.0, 0.0);
+
+            tail_rotor_scene.reference_point = glm::vec3(0.35, 2.3, 10.4);
+
+            root.add_child(&lunar_scene);
+            lunar_scene.add_child(&body_scene);
+            body_scene.add_child(&door_scene);
+            body_scene.add_child(&main_rotor_scene);
+            body_scene.add_child(&tail_rotor_scene);
+
+            helicopters.push(body_scene);
+        }
 
         // Shaders here
         let simple_shader = unsafe {
@@ -321,16 +328,18 @@ fn main() {
                 gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky, full opacity
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-                main_rotor_scene.rotation += glm::vec3(0.0, delta_time * 5.0, 0.0);
-                tail_rotor_scene.rotation += glm::vec3(delta_time * 5.0, 0.0, 0.0);
-
                 let animation = simple_heading_animation(elapsed);
-                body_scene.position[0] = animation.x;
-                body_scene.position[1] = 0.0;
-                body_scene.position[2] = animation.z;
-                body_scene.rotation[0] = animation.pitch;
-                body_scene.rotation[1] = animation.yaw;
-                body_scene.rotation[2] = animation.roll;
+                for i in 0..number_of_helicopters {
+                    helicopters[i][1].rotation += glm::vec3(0.0, delta_time * 5.0, 0.0);
+                    helicopters[i][2].rotation += glm::vec3(delta_time * 5.0, 0.0, 0.0);
+
+                    helicopters[i].position[0] = animation.x;
+                    helicopters[i].position[1] = 0.0;
+                    helicopters[i].position[2] = animation.z;
+                    helicopters[i].rotation[0] = animation.pitch;
+                    helicopters[i].rotation[1] = animation.yaw;
+                    helicopters[i].rotation[2] = animation.roll;
+                }
 
                 let mut temp: glm::Mat4 = glm::identity();
                 draw_scene(&root, &transformation_matrix, &temp);
