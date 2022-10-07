@@ -120,6 +120,7 @@ unsafe fn draw_scene(node: &scene_graph::SceneNode, view_projection_matrix: &glm
     if node.index_count > 0 {
         let uniform_matrix = view_projection_matrix * transformation_matrix;
         gl::UniformMatrix4fv(2, 1, gl::FALSE, uniform_matrix.as_ptr());
+        gl::UniformMatrix4fv(4, 1, gl::FALSE, transformation_matrix.as_ptr());
         gl::BindVertexArray(node.vao_id);
         gl::DrawElements(gl::TRIANGLES, node.index_count, gl::UNSIGNED_INT, ptr::null());
     }
