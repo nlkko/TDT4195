@@ -200,6 +200,8 @@ fn main() {
 
         let mut helicopters: Vec<scene_graph::Node> = Vec::new();
         let number_of_helicopters = 11;
+        let mut door_position = glm::vec3(0.0, 0.0, 0.0);
+
         for i in 0..number_of_helicopters {
             let helicopter_body = unsafe { create_vao(&helicopter.body.vertices, &helicopter.body.indices, &helicopter.body.colors, &helicopter.body.normals) };
             let helicopter_door = unsafe { create_vao(&helicopter.door.vertices, &helicopter.door.indices, &helicopter.door.colors, &helicopter.door.normals) };
@@ -300,6 +302,16 @@ fn main() {
                         VirtualKeyCode::Down => { // Roll Forwards
                             rotation[0] -= delta_time;
                         }
+                        VirtualKeyCode::R => { // Open door
+                            if door_position[2] < 2.0 {
+                                door_position[2] += 0.01;
+                            }
+                        }
+                        VirtualKeyCode::F => { // Close door
+                            if door_position[2] > 0.0 {
+                                door_position[2] -= 0.01;
+                            }
+                        }
                         // default handler:
                         _ => { }
                     }
@@ -330,6 +342,8 @@ fn main() {
                 for i in 0..number_of_helicopters {
                     helicopters[i][1].rotation += glm::vec3(0.0, delta_time * 5.0, 0.0);
                     helicopters[i][2].rotation += glm::vec3(delta_time * 5.0, 0.0, 0.0);
+
+                    helicopters[i][0].position = door_position;
 
                     helicopters[i].position[0] = animation.x + (i % (number_of_helicopters / 3)) as f32 * 15.0;
                     helicopters[i].position[1] = 10.0;
